@@ -1,102 +1,145 @@
+import os
 import random
-import tkinter as tk
-from tkinter import messagebox
 import time
 
-class SimonGame:
-    def __init__(self, root):
-        self.root = root
-        self.sequence = []
-        self.player_sequence = []
-        self.colors = ['red', 'green', 'blue', 'yellow']
-        self.score = 0
-        self.highest_score = 0
-        self.game_over = False
+# Clear Terminal
+def clear():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
-        self.create_widgets()
 
-    def create_widgets(self):
-        self.start_button = tk.Button(self.root, text="Start", command=self.play)
-        self.start_button.pack()
+# Show High Score
+def showHighScore():
+    print(f"High Score: {highscore} by {highname}")
 
-        self.color_buttons = []
-        for color in self.colors:
-            button = tk.Button(self.root, bg=color, width=10, height=5, command=lambda c=color: self.click_color(c))
-            button.pack()
-            self.color_buttons.append(button)
 
-        self.status_label = tk.Label(self.root, text="")
-        self.status_label.pack()
+# Show Player's Current Score
+def showScore():
+    print(f"Score: {score}")
 
-    def play(self):
-        self.start_button.config(state=tk.DISABLED)
-        self.sequence = []
-        self.score = 0
-        self.game_over = False
-        self.status_label.config(text="Watch the sequence...")
-        self.root.update()
+
+# Add Color to Simon's Sequence
+def addColor():
+    global simons_colors
+    simons_colors += random.choice(colors)
+
+
+# Your Turn
+def userTurn():
+    turn = input("Your turn:\n").upper()
+    return turn
+
+# Get High Score as Number
+def getHighScore():
+    with open("highscore.txt", "r") as hs:
+        stats = hs.readlines()
+    return stats
+
+
+# Set High Score and Name
+def setHighScore(name, score):
+    with open("highscore.txt", "w") as hs:
+        hs.write(f"{name}\n{score}")
+
+# Create highscore file if none
+try:
+    getHighScore()
+except:
+    with open("highscore.txt", "w") as f:
+        f.write("null\n0")
+
+# High Score Values
+record = getHighScore()
+highname = record[0]
+highscore = int(record[1])
+
+# Possible Colors in Sequence
+colors = ('R', 'G', 'B', 'Y')
+
+# Simon's Sequence
+simons_colors = []
+
+# Tracks Player's Score
+score = 0
+
+# Initialize Simon's Sequence
+for i in range(2):
+    addColor()
+
+# Show High Score
+clear()
+showHighScore()
+time.sleep(2)
+
+# Show Player Score
+clear()
+showScore()
+time.sleep(2)
+
+# Gameplay Loop
+while True:
+
+    # Add Color to Sequence
+    addColor()
+
+    # Combine Simon's Colors into Sequence
+    sequence = ''.join(simons_colors)
+
+    # Show Simon before printing sequence
+    print("Simon says:")
+    time.sleep(1)
+    clear()
+    showScore()
+
+    # Show One Color at a Time
+    for color in simons_colors:
+
+        # Pause Between Colors
+        print("Simon says:")
+        time.sleep(0.1)
+        clear()
+        showScore()
+
+        # Display Next Color
+        print(f"Simon says: {color}")
         time.sleep(1)
+        clear()
+        showScore()
 
-        while not self.game_over:
-            self.generate_sequence()
-            self.display_sequence()
-            self.get_player_input()
-            self.check_sequence()
+    # Correct Sequence from Player
+    if userTurn() == sequence:
 
-        self.start_button.config(state=tk.NORMAL)
+        # Increase Score
+        score += 1
+        clear()
+        showScore()
 
-    def generate_sequence(self):
-        self.sequence.append(random.choice(self.colors))
+    # Game Over
+    else:
 
-    def display_sequence(self):
-        for color in self.sequence:
-            self.flash_color(color)
-            time.sleep(0.5)
-            self.root.update()
-            time.sleep(0.5)
+        # New High Score
+        if score > highscore:
 
-    def flash_color(self, color):
-        for button in self.color_buttons:
-            if button.cget("bg") == color:
-                button.config(bg="white")
-                self.root.update()
-                time.sleep(0.5)
-                button.config(bg=color)
-                self.root.update()
+            # Display High Score Message
+            clear()
+            print(f"GAME OVER\nNew High Score: {score}!")
 
-    def get_player_input(self):
-        self.status_label.config(text="Your turn!")
-        self.player_sequence = []
+            # Get player's name
+            name = input("Enter your name: ")
 
-        for button in self.color_buttons:
-            button.config(state=tk.NORMAL)
-
-    def click_color(self, color):
-        self.player_sequence.append(color)
-        if len(self.player_sequence) == len(self.sequence):
-            self.check_sequence()
-
-    def check_sequence(self):
-        if self.player_sequence == self.sequence:
-            self.score += 1
-            self.status_label.config(text=f"Correct! Your score is now: {self.score}")
-            if self.score > self.highest_score:
-                self.highest_score = self.score
-                self.status_label.config(text=f"Correct! Your score is now: {self.score}\nCongratulations! You've achieved a new highest score!")
-            self.root.update()
-            time.sleep(1)
+            # Save new high score
+            setHighScore(name, str(score))
+            break
+        
+        # No New High Score
         else:
-            messagebox.showinfo("Game Over", f"Incorrect! Game over. Your final score is: {self.score}\nHighest score: {self.highest_score}")
-            self.game_over = True
+            
+            # Display Game Over Message
+            clear()
+            print("GAME OVER")
 
-            for button in self.color_buttons:
-                button.config(state=tk.DISABLED)
+            # Show High Score
+            showHighScore()
 
-def main():
-    root = tk.Tk()
-    root.title("Simon Game")
-    game = SimonGame(root)
-    root.mainloop()
-
-if __name__ == "__main__":
-    main()
+            # Show Player Score
+            print(f"Score: {score}")
+            break
