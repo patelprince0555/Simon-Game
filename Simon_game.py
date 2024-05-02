@@ -142,4 +142,3 @@ while True:
 
             # Show Player Score
             print(f"Score: {score}")
-            break  
